@@ -35,6 +35,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -357,20 +358,31 @@ public final class MobManager {
         if (own != null) return own.equals(faction);
         if (!(entity instanceof org.bukkit.entity.Player player)) return false;
         if (player.hasPermission(factionPermission(faction))) return true;
-        for (String entry : plugin.getConfig().getStringList("factions." + faction)) {
-            if (entry.equalsIgnoreCase(player.getName()) || entry.equalsIgnoreCase(player.getUniqueId().toString())) return true;
-        }
-        return false;
+        Set<String> members = factionMembers.computeIfAbsent(faction, this::loadFactionMembers);
+        return members.contains(player.getName().toLowerCase(Locale.ROOT)) || members.contains(player.getUniqueId().toString());
     }
 
-    private final java.util.Set<String> registeredFactionPermissions = ConcurrentHashMap.newKeySet();
+    private Set<String> loadFactionMembers(String faction) {
+        Set<String> members = new HashSet<>();
+        for (String entry : plugin.getConfig().getStringList("factions." + faction)) members.add(entry.toLowerCase(Locale.ROOT));
+        return members;
+    }
+
+    public void clearFactionCache() {
+        factionMembers.clear();
+    }
+
+    private final Map<String, Set<String>> factionMembers = new ConcurrentHashMap<>();
+    private final Map<String, String> factionPermissions = new ConcurrentHashMap<>();
 
     private String factionPermission(String faction) {
-        String node = "bettermob.faction." + faction;
-        if (registeredFactionPermissions.add(node) && Bukkit.getPluginManager().getPermission(node) == null) {
-            Bukkit.getPluginManager().addPermission(new org.bukkit.permissions.Permission(node, org.bukkit.permissions.PermissionDefault.FALSE));
-        }
-        return node;
+        return factionPermissions.computeIfAbsent(faction, name -> {
+            String node = "bettermob.faction." + name;
+            if (Bukkit.getPluginManager().getPermission(node) == null) {
+                Bukkit.getPluginManager().addPermission(new org.bukkit.permissions.Permission(node, org.bukkit.permissions.PermissionDefault.FALSE));
+            }
+            return node;
+        });
     }
 
     public boolean sameFaction(Entity first, Entity second) {

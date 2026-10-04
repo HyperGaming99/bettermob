@@ -106,6 +106,7 @@ public final class BetterMobPlugin extends JavaPlugin {
 
     public int reloadAll() {
         reloadConfig();
+        manager.clearFactionCache();
         messages.reload();
         debug.reload();
         stats.reload(getConfig());
