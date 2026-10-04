@@ -162,7 +162,7 @@ Alias: `/bmob`.
 `info` logs every trigger that fires (and whether the event was cancelled), every skill run with the reason it
 stopped (conditions, target conditions, cooldown, `castinstead`) and AI goals that are missing (with the goals
 the mob type has). `verbose` adds every mechanic with its targeter, target count and parameters, `cancelskill`,
-bone offsets, `shoot` and `totem`. `filter <id>` limits the output to one mob id, skill id or player name,
+bone offsets, `shoot` and `totem`. `filter <id>` limits the output to one mob id, skill id or player name (all three tab-complete),
 `chat` also sends it to you in chat. Nothing is built or logged while debug is off.
 
 ## Languages
@@ -416,7 +416,7 @@ so a model has to exist in whichever engine you point at it.
 
 **Factions:** players can belong to a faction too: give them the permission `bettermob.faction.<name>` (lower case) or list them under `factions:` in `config.yml` (player name or UUID). Mobs of that faction then ignore them, and they can't hurt those mobs. Without either, players are in no faction (ops included).
 
-**Conditions:** `offgcd`, `onground`, `health{h=<50%}` (caster health; absolute value or percent, also `>10`, `<=5`, `20-40`), `lineofsight` (alias `los`, the caster sees the trigger/target), `world{w=world,world_nether}`, `biome{b=DESERT,PLAINS}`, `time{t=day|night|<ticks or range>}`, `variable{var=caster.phase;value=>=2}`, `chance{chance=0.75}`, `hastag{t=...}`, `hasaura{n=...}`, `faction{faction=Elite,Other}` (the caster's, or each candidate's inside a multi-target targeter), `onblock{b=...}` (block under the caster), `blocktype{type=...}`, `skillOnCooldown{skill=...}`, `distance{d=0-6}` (also `>3`, `<=5`) to the trigger/target. A skill's `Conditions`/`TargetConditions` entry may end in `castinstead <skill>` to cast that skill instead when it holds. Any mechanic line can
+**Conditions:** `offgcd`, `onground`, `sneaking` (the caster is a sneaking player), `health{h=<50%}` (caster health; absolute value or percent, also `>10`, `<=5`, `20-40`), `lineofsight` (alias `los`, the caster sees the trigger/target), `world{w=world,world_nether}`, `biome{b=DESERT,PLAINS}`, `time{t=day|night|<ticks or range>}`, `variable{var=caster.phase;value=>=2}`, `chance{chance=0.75}`, `hastag{t=...}`, `hasaura{n=...}`, `faction{faction=Elite,Other}` (the caster's, or each candidate's inside a multi-target targeter), `onblock{b=...}` (block under the caster), `blocktype{type=...}`, `skillOnCooldown{skill=...}`, `distance{d=0-6}` (also `>3`, `<=5`) to the trigger/target. A skill's `Conditions`/`TargetConditions` entry may end in `castinstead <skill>` to cast that skill instead when it holds. Any mechanic line can
 end with `?condition{...}` (or `?!condition{...}` to negate) to run only when that
 check passes; unsupported conditions
 are logged and treated as passing, so the line still runs.
