@@ -4,6 +4,8 @@ import eu.northsoft.bettermob.BetterMobPlugin;
 import eu.northsoft.bettermob.integration.PlaceholderHook;
 import eu.northsoft.bettermob.util.Tasks;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.boss.BarFlag;
 import org.bukkit.boss.BossBar;
@@ -11,8 +13,10 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -67,13 +71,18 @@ final class BossBarManager {
         bar.setProgress(max <= 0 ? 0 : Math.max(0, Math.min(1, health / max)));
         bar.setTitle(title(definition, health, max));
 
+        World world = entity.getWorld();
+        Location location = entity.getLocation();
+        Location scratch = location.clone();
         double rangeSquared = definition.bossBar.range() * definition.bossBar.range();
-        for (Player player : entity.getWorld().getPlayers()) {
-            if (player.getLocation().distanceSquared(entity.getLocation()) <= rangeSquared) bar.addPlayer(player);
-            else bar.removePlayer(player);
+        Set<Player> viewing = new HashSet<>(bar.getPlayers());
+        for (Player player : world.getPlayers()) {
+            boolean inRange = player.getLocation(scratch).distanceSquared(location) <= rangeSquared;
+            if (inRange && !viewing.contains(player)) bar.addPlayer(player);
+            else if (!inRange && viewing.contains(player)) bar.removePlayer(player);
         }
-        for (Player viewer : new ArrayList<>(bar.getPlayers())) {
-            if (!viewer.isOnline() || !viewer.getWorld().equals(entity.getWorld())) bar.removePlayer(viewer);
+        for (Player viewer : viewing) {
+            if (!viewer.isOnline() || !viewer.getWorld().equals(world)) bar.removePlayer(viewer);
         }
     }
 
