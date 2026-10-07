@@ -504,7 +504,9 @@ public final class MobManager {
         if (!(entity instanceof org.bukkit.entity.Player player)) return false;
         if (player.hasPermission(factionPermission(faction))) return true;
         Set<String> members = factionMembers().get(faction);
-        return members != null && (members.contains(player.getName().toLowerCase(java.util.Locale.ROOT)) || members.contains(player.getUniqueId().toString()));
+        if (members == null) return false;
+        if (members.contains(player.getUniqueId().toString())) return true;
+        return Bukkit.isOwnedByCurrentRegion(player) && members.contains(player.getName().toLowerCase(java.util.Locale.ROOT));
     }
 
     private record FactionCache(org.bukkit.configuration.file.FileConfiguration source, Map<String, Set<String>> members) {}
