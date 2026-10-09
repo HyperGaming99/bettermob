@@ -4,6 +4,7 @@ import eu.northsoft.bettermob.BetterMobPlugin;
 import eu.northsoft.bettermob.mob.MobDefinition;
 import eu.northsoft.bettermob.mob.MobManager;
 import eu.northsoft.bettermob.util.Tasks;
+import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.block.Block;
@@ -28,6 +29,7 @@ public final class SpawnerManager {
     private static final int CHUNK_SIZE = 16;
     private static final long PLAYER_FRESH_MILLIS = 3000L;
     private static final int GROUND_SEARCH_DEPTH = 3;
+    private static final int MAX_RECONCILE_ATTEMPTS = 6;
 
     private final BetterMobPlugin plugin;
     private final MobManager manager;
@@ -113,7 +115,10 @@ public final class SpawnerManager {
     private void tick(Spawner spawner, Location center) {
         long now = System.currentTimeMillis();
         if (now < spawner.nextSpawnAt || !center.getWorld().isChunkLoaded(center.getBlockX() >> 4, center.getBlockZ() >> 4)) return;
-        if (!spawner.reconciled) reconcile(spawner, center);
+        if (!spawner.reconciled) {
+            reconcile(spawner, center);
+            if (!spawner.reconciled) return;
+        }
         if (now - spawner.playerNearAt > PLAYER_FRESH_MILLIS) return;
         MobDefinition definition = manager.registry().get(spawner.mob);
         if (definition == null) return;
@@ -141,15 +146,30 @@ public final class SpawnerManager {
         World world = center.getWorld();
         int centerX = center.getBlockX() >> 4;
         int centerZ = center.getBlockZ() >> 4;
+        boolean notLoaded = false;
+        boolean foreignRegion = false;
         for (int x = centerX - chunkRadius; x <= centerX + chunkRadius; x++) {
             for (int z = centerZ - chunkRadius; z <= centerZ + chunkRadius; z++) {
-                if (!plugin.getServer().isOwnedByCurrentRegion(world, x, z) || !world.isChunkLoaded(x, z)) continue;
-                for (Entity entity : world.getChunkAt(x, z, false).getEntities()) {
+                if (!plugin.getServer().isOwnedByCurrentRegion(world, x, z)) {
+                    foreignRegion = true;
+                    continue;
+                }
+                if (!world.isChunkLoaded(x, z)) {
+                    notLoaded = true;
+                    continue;
+                }
+                Chunk chunk = world.getChunkAt(x, z, false);
+                if (chunk == null || !chunk.isEntitiesLoaded()) {
+                    notLoaded = true;
+                    continue;
+                }
+                for (Entity entity : chunk.getEntities()) {
                     if (entity.getScoreboardTags().contains(spawner.tag())) spawner.alive.add(entity.getUniqueId());
                 }
             }
         }
-        spawner.reconciled = true;
+        if (notLoaded) return;
+        if (!foreignRegion || ++spawner.reconcileAttempts >= MAX_RECONCILE_ATTEMPTS) spawner.reconciled = true;
     }
 
     void track(Entity entity) {
