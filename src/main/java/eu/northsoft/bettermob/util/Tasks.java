@@ -25,13 +25,21 @@ public final class Tasks {
 
     public static void runLater(Plugin plugin, Entity entity, long ticks, Runnable task) {
         if (FOLIA) {
-            entity.getScheduler().runDelayed(plugin, scheduled -> task.run(), null, Math.max(1, ticks));
+            long delay = Math.max(1, ticks);
+            int startedAt = Bukkit.getCurrentTick();
+            entity.getScheduler().runDelayed(plugin, scheduled -> task.run(), () -> runAfterDeath(plugin, entity, delay, startedAt, task), delay);
             return;
         }
 
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
             if (Bukkit.getEntity(entity.getUniqueId()) != null || isDeadLiving(entity)) task.run();
         }, ticks);
+    }
+
+    private static void runAfterDeath(Plugin plugin, Entity entity, long delay, int startedAt, Runnable task) {
+        if (!(entity instanceof LivingEntity living) || !Bukkit.isOwnedByCurrentRegion(living) || living.getHealth() > 0) return;
+        long elapsed = Bukkit.getCurrentTick() - startedAt;
+        Bukkit.getRegionScheduler().runDelayed(plugin, living.getLocation(), scheduled -> task.run(), Math.max(1, delay - elapsed));
     }
 
     private static boolean isDeadLiving(Entity entity) {
