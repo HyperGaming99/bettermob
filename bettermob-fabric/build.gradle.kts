@@ -3,7 +3,7 @@ plugins {
 }
 
 base {
-    archivesName.set("bettermob-fabric")
+    archivesName.set("bettermob-fabric-mc1.21")
 }
 
 dependencies {
