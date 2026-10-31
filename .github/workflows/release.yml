@@ -56,6 +56,7 @@ jobs:
           path: |
             bettermob-paper/build/libs/bettermob-*.jar
             bettermob-fabric/build/libs/bettermob-fabric-*.jar
+            bettermob-fabric-26/build/libs/bettermob-fabric-*.jar
 
       - name: Build the API example
         run: |
@@ -84,6 +85,7 @@ jobs:
           files: |
             bettermob-paper/build/libs/bettermob-*.jar
             bettermob-fabric/build/libs/bettermob-fabric-*.jar
+            bettermob-fabric-26/build/libs/bettermob-fabric-*.jar
           body_path: ${{ runner.temp }}/commits.md
           generate_release_notes: true
 
@@ -101,10 +103,12 @@ jobs:
           version=$(./gradlew -q printVersion)
           sha=$(git rev-parse --short HEAD)
           paper_asset="bettermob-paper-${version}-dev-${sha}.jar"
-          fabric_asset="bettermob-fabric-${version}-dev-${sha}.jar"
+          fabric_121_asset="bettermob-fabric-mc1.21-${version}-dev-${sha}.jar"
+          fabric_26_asset="bettermob-fabric-mc26-${version}-dev-${sha}.jar"
           cp "bettermob-paper/build/libs/bettermob-${version}.jar" "$paper_asset"
-          cp "bettermob-fabric/build/libs/bettermob-fabric-${version}.jar" "$fabric_asset"
+          cp "bettermob-fabric/build/libs/bettermob-fabric-mc1.21-${version}.jar" "$fabric_121_asset"
+          cp "bettermob-fabric-26/build/libs/bettermob-fabric-mc26-${version}.jar" "$fabric_26_asset"
           gh release delete dev-build --cleanup-tag --yes || true
-          gh release create dev-build "$paper_asset" "$fabric_asset" --prerelease --target "$GITHUB_SHA" \
+          gh release create dev-build "$paper_asset" "$fabric_121_asset" "$fabric_26_asset" --prerelease --target "$GITHUB_SHA" \
             --title "Dev build" \
-            --notes "$(printf 'Automatic build of the `dev` branch at commit %s. Unstable, may contain unfinished features. This release is replaced on every push to dev.\n\n- **Paper / Folia**: `%s`\n- **Fabric (Client & Server)**: `%s`\n\n' "$sha" "$paper_asset" "$fabric_asset"; cat "$RUNNER_TEMP/commits.md")"
+            --notes "$(printf 'Automatic build of the `dev` branch at commit %s. Unstable, may contain unfinished features. This release is replaced on every push to dev.\n\n- **Paper / Folia**: `%s`\n- **Fabric (MC 1.21.11, Client & Server)**: `%s`\n- **Fabric (MC 26.x, Client & Server)**: `%s`\n\n' "$sha" "$paper_asset" "$fabric_121_asset" "$fabric_26_asset"; cat "$RUNNER_TEMP/commits.md")"

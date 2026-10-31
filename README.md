@@ -22,8 +22,8 @@
 </p>
 
 > [!WARNING]
-> **Fabric Beta / Early Access Notice**  
-> Fabric support is currently in active development. We recommend using the Fabric mod primarily in **Singleplayer** or on **testing/development servers** before deploying it to a live production environment.
+> **Fabric & Quilt Beta / Early Access Notice**  
+> Fabric and Quilt support is currently in active development. We recommend using the Fabric/Quilt mod primarily in **Singleplayer** or on **testing/development servers** before deploying it to a live production environment.
 
 ---
 
@@ -60,11 +60,11 @@
 | 🧰 **Tools** | `/bettermob test`, aggro lines, a live reload report, skill profiling, JSON schemas for editors. |
 | 🔌 **Developer API** | Custom mechanics, conditions, targeters, placeholders and a long list of events. |
 
-BetterMob runs on **Folia** and **Paper** as a plugin, and on **Fabric 1.21+** as a mod (supporting both client singleplayer and dedicated server environments).
+BetterMob runs on **Folia** and **Paper** as a plugin, and on **Fabric / Quilt (1.21.11 to 26.x)** as a mod (supporting both client singleplayer and dedicated server environments).
 
 ### 🌐 Platform Feature Matrix
 
-| Feature | Paper / Folia | Fabric |
+| Feature | Paper / Folia | Fabric / Quilt (1.21.11 – 26.x) |
 |---|---|---|
 | **YAML Mob Definitions** | ✅ `plugins/BetterMob/mobs/*.yml` | ✅ `config/bettermob/mobs/*.yml` |
 | **3D Models** | ✅ [BetterModel](https://modrinth.com/plugin/bettermodel) & [ModelEngine](https://www.spigotmc.org/resources/model-engine-4.108821/) | ✅ [BetterModel-Fabric](https://modrinth.com/mod/bettermodel) |
