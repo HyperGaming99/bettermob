@@ -51,6 +51,31 @@ public final class FabricMobManager {
         return activeMobs;
     }
 
+    public int livingOf(java.util.Set<String> mobIds) {
+        if (mobIds == null || mobIds.isEmpty() || activeMobs.isEmpty()) return 0;
+        int count = 0;
+        for (ActiveFabricMob mob : activeMobs.values()) {
+            if (mob.definition() != null && mobIds.contains(mob.definition().id.toLowerCase(java.util.Locale.ROOT))) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    public int reloadLiving(FabricMobRegistry registry) {
+        int updated = 0;
+        for (ActiveFabricMob mob : activeMobs.values()) {
+            if (mob.definition() != null) {
+                MobDefinition newDef = registry.get(mob.definition().id);
+                if (newDef != null) {
+                    mob.updateDefinition(newDef);
+                    updated++;
+                }
+            }
+        }
+        return updated;
+    }
+
     public void onHeal(LivingEntity entity, float amount) {
         if (entity == null || amount <= 0) return;
         ActiveFabricMob mob = activeMobs.get(entity.getUuid());
@@ -126,7 +151,9 @@ public final class FabricMobManager {
                 skillEngine.executeStep(trigger.step(), ctx);
             }
             if (mob.definition().drops != null && mob.entity() != null && mob.entity().world() != null) {
-                var dropResult = eu.northsoft.bettermob.drop.DropRoller.roll(mob.definition().drops);
+                var dropResult = mod.dropRegistry() != null
+                        ? mod.dropRegistry().roll(mob.definition().drops)
+                        : eu.northsoft.bettermob.drop.DropRoller.roll(mob.definition().drops);
                 for (var drop : dropResult.items()) {
                     mob.entity().world().dropItem(mob.entity().position(), drop.itemKey(), drop.amount());
                 }

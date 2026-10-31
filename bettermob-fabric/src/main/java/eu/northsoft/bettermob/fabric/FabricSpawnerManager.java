@@ -49,6 +49,7 @@ public final class FabricSpawnerManager {
     private final BetterMobFabricMod mod;
     private final Path configFile;
     private final Map<String, ActiveSpawner> spawners = new ConcurrentHashMap<>();
+    private volatile Map<String, String> fingerprints = Map.of();
     private long currentTick = 0;
 
     public FabricSpawnerManager(BetterMobFabricMod mod, Path configFile) {
@@ -60,19 +61,30 @@ public final class FabricSpawnerManager {
         return spawners;
     }
 
+    public Map<String, String> fingerprints() {
+        return fingerprints;
+    }
+
     public void load() {
         spawners.clear();
+        Map<String, String> prints = new java.util.LinkedHashMap<>();
         File file = configFile.toFile();
-        if (!file.exists()) return;
+        if (!file.exists()) {
+            this.fingerprints = prints;
+            return;
+        }
         try {
             ConfigSection root = YamlConfig.load(file);
             for (String id : root.getKeys(false)) {
                 ConfigSection sec = root.getConfigurationSection(id);
                 SpawnerDefinition def = SpawnerDefinition.read(id, sec);
                 if (def != null) {
-                    spawners.put(id.toLowerCase(java.util.Locale.ROOT), new ActiveSpawner(def));
+                    String lower = id.toLowerCase(java.util.Locale.ROOT);
+                    spawners.put(lower, new ActiveSpawner(def));
+                    prints.put(lower, eu.northsoft.bettermob.util.ReloadDiff.fingerprint(sec));
                 }
             }
+            this.fingerprints = prints;
             LOGGER.info("Loaded {} spawner(s) from {}", spawners.size(), file.getName());
         } catch (Exception e) {
             LOGGER.error("Failed to load spawners from {}: {}", file.getPath(), e.getMessage());

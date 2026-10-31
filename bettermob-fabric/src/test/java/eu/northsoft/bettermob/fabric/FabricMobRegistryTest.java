@@ -61,4 +61,28 @@ class FabricMobRegistryTest {
         assertNotNull(registry.get("skeleton_knight"));
         assertNotNull(registry.get("zombie_brute"));
     }
+
+    @Test
+    void loadsMobsFromPacksFolder(@TempDir Path tempDir) throws IOException {
+        Path packMobs = tempDir.resolve("packs").resolve("rpg_pack").resolve("Mobs");
+        Files.createDirectories(packMobs);
+
+        String mobYaml = """
+                Type: ZOMBIE
+                Display: '&6Pack Boss'
+                Health: 200
+                """;
+
+        Files.writeString(packMobs.resolve("pack_boss.yml"), mobYaml);
+
+        FabricPackScanner scanner = new FabricPackScanner(tempDir);
+        FabricMobRegistry registry = new FabricMobRegistry(scanner);
+        registry.load();
+
+        MobDefinition boss = registry.get("pack_boss");
+        assertNotNull(boss);
+        assertEquals("pack_boss", boss.id);
+        assertEquals("ZOMBIE", boss.type);
+        assertEquals(200.0, boss.health);
+    }
 }

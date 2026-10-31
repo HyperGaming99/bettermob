@@ -1,7 +1,10 @@
 package eu.northsoft.bettermob.fabric.mixin;
 
+import eu.northsoft.bettermob.fabric.ActiveFabricMob;
 import eu.northsoft.bettermob.fabric.BetterMobFabricMod;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.damage.DamageSource;
+import net.minecraft.server.world.ServerWorld;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -26,6 +29,20 @@ public abstract class LivingEntityMixin {
             float actualHealed = entity.getHealth() - this.bettermob$healthBeforeHeal;
             if (actualHealed > 0.0f) {
                 BetterMobFabricMod.instance().mobManager().onHeal(entity, actualHealed);
+            }
+        }
+    }
+
+    @Inject(method = "drop", at = @At("HEAD"), cancellable = true)
+    private void bettermob$drop(ServerWorld world, DamageSource source, CallbackInfo ci) {
+        if (BetterMobFabricMod.instance() != null) {
+            ActiveFabricMob mob = BetterMobFabricMod.instance().mobManager().get(((LivingEntity) (Object) this).getUuid());
+            if (mob != null) {
+                boolean prevent = mob.definition().drops != null
+                        || (mob.definition().options != null && mob.definition().options.preventOtherDrops());
+                if (prevent) {
+                    ci.cancel();
+                }
             }
         }
     }

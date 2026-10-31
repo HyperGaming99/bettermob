@@ -43,16 +43,35 @@ public final class FabricBetterModelService implements ModelService {
     public Object attach(PlatformEntity entity, String modelId) {
         if (!available() || entity == null || modelId == null) return null;
         try {
+            Entity mcEntity = FabricAdapters.minecraft(entity);
+            if (mcEntity == null) return null;
+
+            // 1. BetterModel Fabric extension: EntitiesKt.toTracker(mcEntity, modelId)
+            try {
+                Class<?> entitiesKt = Class.forName("kr.toxicity.model.impl.fabric.EntitiesKt");
+                Method toTracker = entitiesKt.getMethod("toTracker", Entity.class, String.class);
+                Object tracker = toTracker.invoke(null, mcEntity, modelId);
+                if (tracker != null) {
+                    mcEntity.setInvisible(true);
+                    return tracker;
+                }
+            } catch (Throwable ignored) {}
+
+            // 2. Direct renderer getOrCreate
             Object renderer = modelOrNullMethod().invoke(null, modelId);
             if (renderer == null) return null;
-            Entity mcEntity = FabricAdapters.minecraft(entity);
             Object adapted = adapt(mcEntity);
-            if (adapted == null) return null;
-            for (Method method : renderer.getClass().getMethods()) {
-                if (method.getName().equals("getOrCreate") && method.getParameterCount() == 1) {
-                    try {
-                        return method.invoke(renderer, adapted);
-                    } catch (IllegalArgumentException ignored) {}
+            if (adapted != null) {
+                for (Method method : renderer.getClass().getMethods()) {
+                    if (method.getName().equals("getOrCreate") && method.getParameterCount() == 1) {
+                        try {
+                            Object tracker = method.invoke(renderer, adapted);
+                            if (tracker != null) {
+                                mcEntity.setInvisible(true);
+                                return tracker;
+                            }
+                        } catch (IllegalArgumentException ignored) {}
+                    }
                 }
             }
             return null;
@@ -109,6 +128,12 @@ public final class FabricBetterModelService implements ModelService {
     private Method adaptMethod() throws ReflectiveOperationException {
         if (adaptMethod == null) {
             Class<?> adapterClass;
+            try {
+                adapterClass = Class.forName("kr.toxicity.model.impl.fabric.FabricWrappersKt");
+                adaptMethod = adapterClass.getMethod("wrap", Entity.class);
+                return adaptMethod;
+            } catch (ClassNotFoundException | NoSuchMethodException ignored) {}
+
             try {
                 adapterClass = Class.forName(FABRIC_ADAPTER);
             } catch (ClassNotFoundException e) {

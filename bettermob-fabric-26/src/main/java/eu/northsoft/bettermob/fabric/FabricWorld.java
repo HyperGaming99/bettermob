@@ -114,6 +114,10 @@ public final class FabricWorld implements PlatformWorld {
     @Override
     public void dropItem(Position position, String itemType, int count) {
         if (itemType == null || count <= 0) return;
+        if (BetterMobFabricMod.instance() != null && BetterMobFabricMod.instance().dropRegistry() != null) {
+            BetterMobFabricMod.instance().dropRegistry().spawnDrop(world, position, itemType, count);
+            return;
+        }
         String normalized = itemType.toLowerCase(java.util.Locale.ROOT);
         if (!normalized.contains(":")) normalized = "minecraft:" + normalized;
         Identifier id = Identifier.tryParse(normalized);
