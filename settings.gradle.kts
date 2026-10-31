@@ -7,4 +7,4 @@ pluginManagement {
 
 rootProject.name = "bettermob-parent"
 
-include("bettermob-api", "bettermob-core", "bettermob-paper", "bettermob-fabric")
+include("bettermob-api", "bettermob-core", "bettermob-paper", "bettermob-fabric", "bettermob-fabric-26")
