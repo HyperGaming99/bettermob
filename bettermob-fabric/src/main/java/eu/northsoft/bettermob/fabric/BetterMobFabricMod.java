@@ -98,7 +98,7 @@ public final class BetterMobFabricMod implements ModInitializer {
                                         living.maxHealth(def.health);
                                         living.health(def.health);
                                     }
-                                    // Execute ~onSpawn skill triggers
+
                                     var ctx = new eu.northsoft.bettermob.skill.core.CoreSkillContext(living);
                                     for (var trigger : def.triggersOf(eu.northsoft.bettermob.mob.MobDefinition.SkillTrigger.Trigger.SPAWN)) {
                                         skillEngine.executeStep(trigger.step(), ctx);

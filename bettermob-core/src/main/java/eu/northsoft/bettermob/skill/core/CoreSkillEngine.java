@@ -51,13 +51,11 @@ public class CoreSkillEngine {
     }
 
     private void registerBuiltins() {
-        // Built-in targeters
         registerTargeter("self", (params, ctx) -> List.of(CoreSkillTarget.ofEntity(ctx.caster())));
         registerTargeter("caster", (params, ctx) -> List.of(CoreSkillTarget.ofEntity(ctx.caster())));
         registerTargeter("target", (params, ctx) -> ctx.trigger() != null ? List.of(CoreSkillTarget.ofEntity(ctx.trigger())) : List.of());
         registerTargeter("trigger", (params, ctx) -> ctx.trigger() != null ? List.of(CoreSkillTarget.ofEntity(ctx.trigger())) : List.of());
 
-        // Built-in conditions
         registerCondition("chance", (ctx, raw, target) -> {
             float chance = Params.parseFloat(Params.conditionParam(raw, "chance", "c"), 1f);
             return ThreadLocalRandom.current().nextDouble() < chance;
@@ -121,7 +119,6 @@ public class CoreSkillEngine {
         if (step == null || context == null) return;
         if (!(step instanceof SkillStep.Mechanic mech)) return;
 
-        // Resolve targets
         String targeterName = mech.targeter().isEmpty() ? "self" : mech.targeter().toLowerCase(Locale.ROOT);
         CoreSkillTargeter targeter = targeters.get(targeterName);
         if (targeter == null) {
@@ -137,7 +134,6 @@ public class CoreSkillEngine {
         }
 
         for (CoreSkillTarget target : resolvedTargets) {
-            // Check inline condition if present
             if (mech.inlineCondition() != null && !mech.inlineCondition().isBlank()) {
                 Condition cond = Condition.parse(mech.inlineCondition());
                 if (cond != null) {
@@ -147,7 +143,6 @@ public class CoreSkillEngine {
                 }
             }
 
-            // Resolve variables in mechanic parameters
             Map<String, String> casterVars = context.caster() != null ? state.existingVariablesOf(context.caster().uuid()) : null;
             Map<String, String> targetVars = target.entity() != null ? state.existingVariablesOf(target.entity().uuid()) : null;
             Map<String, String> resolvedParams = Substitutions.resolveVariables(mech.params(), context.variables(), casterVars, targetVars);
@@ -159,12 +154,10 @@ public class CoreSkillEngine {
     public void executeSkill(SkillDefinition skill, CoreSkillContext context) {
         if (skill == null || context == null) return;
 
-        // Check skill-level cooldown
         if (skill.cooldown > 0 && context.caster() != null) {
             if (!state.acquireSkillCooldown(context.caster().uuid(), skill)) return;
         }
 
-        // Check skill conditions
         for (String raw : skill.conditions) {
             Condition cond = Condition.parse(raw);
             if (cond != null && !testCondition(cond, context, CoreSkillTarget.ofEntity(context.caster()))) {
@@ -172,7 +165,6 @@ public class CoreSkillEngine {
             }
         }
 
-        // Execute steps
         for (SkillStep step : skill.steps) {
             executeStep(step, context);
         }
