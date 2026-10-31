@@ -20,7 +20,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 class ActiveFabricMobTest {
-
     private static class MockLivingEntity implements PlatformLivingEntity {
         private final UUID uuid = UUID.randomUUID();
         private double health = 100.0;
@@ -77,7 +76,6 @@ class ActiveFabricMobTest {
         assertEquals(-1, mob.currentPhaseIndex());
         assertEquals(0, executed.size());
 
-        // Drop health below 50%
         entity.health(40.0);
         mob.checkPhases(engine, mod);
 

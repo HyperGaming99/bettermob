@@ -17,7 +17,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class CoreSkillEngineTest {
-
     private static class DummyLivingEntity implements PlatformLivingEntity {
         private final UUID uuid = UUID.randomUUID();
         private double health = 20.0;
@@ -151,7 +150,7 @@ class CoreSkillEngineTest {
         engine.executeStep(potStep, context);
         assertEquals("speed", target.potionType);
         assertEquals(100, target.potionDuration);
-        assertEquals(1, target.potionLevel); // amplifier = level - 1
+        assertEquals(1, target.potionLevel);
 
         SkillStep igniteStep = SkillStep.parse("ignite{t=80} @target");
         engine.executeStep(igniteStep, context);
