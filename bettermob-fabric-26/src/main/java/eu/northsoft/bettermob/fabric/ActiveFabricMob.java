@@ -11,7 +11,7 @@ import java.util.UUID;
 
 public final class ActiveFabricMob {
     private final UUID uuid;
-    private final MobDefinition definition;
+    private volatile MobDefinition definition;
     private final PlatformLivingEntity entity;
     private final SkillState skillState = new SkillState();
     private int ticksAlive;
@@ -29,6 +29,12 @@ public final class ActiveFabricMob {
 
     public MobDefinition definition() {
         return definition;
+    }
+
+    public void updateDefinition(MobDefinition newDefinition) {
+        if (newDefinition != null) {
+            this.definition = newDefinition;
+        }
     }
 
     public PlatformLivingEntity entity() {
