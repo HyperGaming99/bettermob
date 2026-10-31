@@ -46,7 +46,6 @@ public final class FabricBetterModelService implements ModelService {
             Entity mcEntity = FabricAdapters.minecraft(entity);
             if (mcEntity == null) return null;
 
-            // 1. BetterModel Fabric extension: EntitiesKt.toTracker(mcEntity, modelId)
             try {
                 Class<?> entitiesKt = Class.forName("kr.toxicity.model.impl.fabric.EntitiesKt");
                 Method toTracker = entitiesKt.getMethod("toTracker", Entity.class, String.class);
@@ -57,7 +56,6 @@ public final class FabricBetterModelService implements ModelService {
                 }
             } catch (Throwable ignored) {}
 
-            // 2. Direct renderer getOrCreate
             Object renderer = modelOrNullMethod().invoke(null, modelId);
             if (renderer == null) return null;
             Object adapted = adapt(mcEntity);

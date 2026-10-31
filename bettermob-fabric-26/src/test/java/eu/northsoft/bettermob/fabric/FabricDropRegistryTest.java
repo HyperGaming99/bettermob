@@ -14,7 +14,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class FabricDropRegistryTest {
-
     @Test
     void loadsDropTablesAndResolvesNestedDrops(@TempDir Path tempDir) throws IOException {
         Path dropsDir = tempDir.resolve("droptables");
@@ -52,10 +51,9 @@ class FabricDropRegistryTest {
 
         DropRoller.RollResult rolled = dropRegistry.roll(bossDrops);
         assertNotNull(rolled);
-        // Exp should accumulate: 10 from boss_drops + 5 from nested_gems = 15
+
         assertEquals(15, rolled.exp());
 
-        // Items should contain DIAMOND (2) and EMERALD (1) from nested
         assertEquals(2, rolled.items().size());
         assertTrue(rolled.items().stream().anyMatch(d -> d.itemKey().equalsIgnoreCase("DIAMOND") && d.amount() == 2));
         assertTrue(rolled.items().stream().anyMatch(d -> d.itemKey().equalsIgnoreCase("EMERALD") && d.amount() == 1));
