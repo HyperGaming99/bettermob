@@ -7,6 +7,8 @@ import eu.northsoft.bettermob.skill.SkillState;
 import eu.northsoft.bettermob.skill.core.CoreSkillContext;
 import eu.northsoft.bettermob.skill.core.CoreSkillEngine;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 public final class ActiveFabricMob {
@@ -16,11 +18,13 @@ public final class ActiveFabricMob {
     private final SkillState skillState = new SkillState();
     private int ticksAlive;
     private int currentPhaseIndex = -1;
+    private double lastHealth;
 
     public ActiveFabricMob(UUID uuid, MobDefinition definition, PlatformLivingEntity entity) {
         this.uuid = uuid;
         this.definition = definition;
         this.entity = entity;
+        this.lastHealth = entity != null ? entity.health() : 0;
     }
 
     public UUID uuid() {
@@ -51,6 +55,20 @@ public final class ActiveFabricMob {
 
     public void tick() {
         ticksAlive++;
+        if (entity != null) lastHealth = entity.health();
+    }
+
+    public List<MobDefinition.SkillTrigger> crossedHealthTriggers(double health, double maxHealth) {
+        double before = lastHealth;
+        lastHealth = health;
+        if (health <= 0) return List.of();
+        List<MobDefinition.SkillTrigger> crossed = new ArrayList<>();
+        for (var trigger : definition.triggersOf(MobDefinition.SkillTrigger.Trigger.HEALTH)) {
+            if (trigger.health() != null && trigger.health().matches(health, maxHealth) && !trigger.health().matches(before, maxHealth)) {
+                crossed.add(trigger);
+            }
+        }
+        return crossed;
     }
 
     public int currentPhaseIndex() {

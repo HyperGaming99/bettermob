@@ -85,6 +85,53 @@ class ActiveFabricMobTest {
     }
 
     @Test
+    void firesHealthTriggerOnlyWhenCrossingThreshold() {
+        String yaml = """
+                Type: ZOMBIE
+                Health: 100
+                Skills:
+                  - test_step{} @self ~onHealth<50%
+                """;
+        MobDefinition def = MobDefinitionParser.parse("threshold_mob", YamlConfig.load(yaml), err -> {});
+        assertNotNull(def);
+        assertEquals(1, def.triggersOf(MobDefinition.SkillTrigger.Trigger.HEALTH).size());
+
+        MockLivingEntity entity = new MockLivingEntity();
+        ActiveFabricMob mob = new ActiveFabricMob(entity.uuid(), def, entity);
+
+        assertEquals(0, mob.crossedHealthTriggers(60, 100).size());
+        assertEquals(1, mob.crossedHealthTriggers(45, 100).size());
+        assertEquals(0, mob.crossedHealthTriggers(40, 100).size());
+        assertEquals(0, mob.crossedHealthTriggers(35, 100).size());
+        assertEquals(0, mob.crossedHealthTriggers(80, 100).size());
+        assertEquals(1, mob.crossedHealthTriggers(30, 100).size());
+        assertEquals(0, mob.crossedHealthTriggers(0, 100).size());
+    }
+
+    @Test
+    void tickRefreshesHealthBaseline() {
+        String yaml = """
+                Type: ZOMBIE
+                Health: 100
+                Skills:
+                  - test_step{} @self ~onHealth<50%
+                """;
+        MobDefinition def = MobDefinitionParser.parse("baseline_mob", YamlConfig.load(yaml), err -> {});
+        assertNotNull(def);
+
+        MockLivingEntity entity = new MockLivingEntity();
+        ActiveFabricMob mob = new ActiveFabricMob(entity.uuid(), def, entity);
+
+        entity.health(20.0);
+        mob.tick();
+        assertEquals(0, mob.crossedHealthTriggers(10, 100).size());
+
+        entity.health(90.0);
+        mob.tick();
+        assertEquals(1, mob.crossedHealthTriggers(10, 100).size());
+    }
+
+    @Test
     void managesActiveMobsLifecycle() {
         BetterMobFabricMod mod = new BetterMobFabricMod();
         CoreSkillEngine engine = new CoreSkillEngine();
