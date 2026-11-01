@@ -78,8 +78,9 @@ public final class BetterMobFabricMod implements ModInitializer {
                 if (current < max && amount > 0) {
                     double newHealth = Math.min(max, current + amount);
                     living.health(newHealth);
-                    if (living.handle() instanceof LivingEntity nmsLiving) {
-                        mobManager.onHeal(nmsLiving, (float) (newHealth - current));
+                    float healed = (float) (living.health() - current);
+                    if (healed > 0 && living.handle() instanceof LivingEntity nmsLiving) {
+                        mobManager.onHeal(nmsLiving, healed);
                     }
                 }
             }

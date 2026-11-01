@@ -22,6 +22,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class FabricMobManager {
     private final BetterMobFabricMod mod;
     private final CoreSkillEngine skillEngine;
+    private final FabricTriggerGuard triggerGuard = new FabricTriggerGuard();
     private final Map<UUID, ActiveFabricMob> activeMobs = new ConcurrentHashMap<>();
 
     public FabricMobManager(BetterMobFabricMod mod, CoreSkillEngine skillEngine) {
@@ -34,9 +35,11 @@ public final class FabricMobManager {
         activeMobs.put(uuid, mob);
 
         CoreSkillContext ctx = new CoreSkillContext(entity);
-        for (var trigger : definition.triggersOf(MobDefinition.SkillTrigger.Trigger.SPAWN)) {
-            skillEngine.executeStep(trigger.step(), ctx);
-        }
+        triggerGuard.run(uuid + ":SPAWN", () -> {
+            for (var trigger : definition.triggersOf(MobDefinition.SkillTrigger.Trigger.SPAWN)) {
+                skillEngine.executeStep(trigger.step(), ctx);
+            }
+        });
     }
 
     public ActiveFabricMob get(UUID uuid) {
@@ -81,15 +84,19 @@ public final class FabricMobManager {
         ActiveFabricMob mob = activeMobs.get(entity.getUUID());
         if (mob == null) return;
         CoreSkillContext ctx = new CoreSkillContext(mob.entity(), null);
-        for (var trigger : mob.definition().triggersOf(MobDefinition.SkillTrigger.Trigger.HEAL)) {
-            skillEngine.executeStep(trigger.step(), ctx);
-        }
-        mob.checkPhases(skillEngine, mod);
-        for (var trigger : mob.definition().triggersOf(MobDefinition.SkillTrigger.Trigger.HEALTH)) {
-            if (trigger.health() != null && trigger.health().matches(entity.getHealth(), entity.getMaxHealth())) {
+        triggerGuard.run(entity.getUUID() + ":HEAL", () -> {
+            for (var trigger : mob.definition().triggersOf(MobDefinition.SkillTrigger.Trigger.HEAL)) {
                 skillEngine.executeStep(trigger.step(), ctx);
             }
-        }
+        });
+        mob.checkPhases(skillEngine, mod);
+        triggerGuard.run(entity.getUUID() + ":HEALTH", () -> {
+            for (var trigger : mob.definition().triggersOf(MobDefinition.SkillTrigger.Trigger.HEALTH)) {
+                if (trigger.health() != null && trigger.health().matches(entity.getHealth(), entity.getMaxHealth())) {
+                    skillEngine.executeStep(trigger.step(), ctx);
+                }
+            }
+        });
     }
 
     public void registerEvents() {
@@ -114,15 +121,19 @@ public final class FabricMobManager {
                         victimMob.entity(),
                         attacker != null ? FabricAdapters.living(attacker) : null
                 );
-                for (var trigger : victimMob.definition().triggersOf(MobDefinition.SkillTrigger.Trigger.DAMAGED)) {
-                    skillEngine.executeStep(trigger.step(), ctx);
-                }
-                victimMob.checkPhases(skillEngine, mod);
-                for (var trigger : victimMob.definition().triggersOf(MobDefinition.SkillTrigger.Trigger.HEALTH)) {
-                    if (trigger.health() != null && trigger.health().matches(victim.getHealth(), victim.getMaxHealth())) {
+                triggerGuard.run(victim.getUUID() + ":DAMAGED", () -> {
+                    for (var trigger : victimMob.definition().triggersOf(MobDefinition.SkillTrigger.Trigger.DAMAGED)) {
                         skillEngine.executeStep(trigger.step(), ctx);
                     }
-                }
+                });
+                victimMob.checkPhases(skillEngine, mod);
+                triggerGuard.run(victim.getUUID() + ":HEALTH", () -> {
+                    for (var trigger : victimMob.definition().triggersOf(MobDefinition.SkillTrigger.Trigger.HEALTH)) {
+                        if (trigger.health() != null && trigger.health().matches(victim.getHealth(), victim.getMaxHealth())) {
+                            skillEngine.executeStep(trigger.step(), ctx);
+                        }
+                    }
+                });
             }
 
             if (attacker != null) {
@@ -132,9 +143,11 @@ public final class FabricMobManager {
                             attackerMob.entity(),
                             FabricAdapters.living(victim)
                     );
-                    for (var trigger : attackerMob.definition().triggersOf(MobDefinition.SkillTrigger.Trigger.ATTACK)) {
-                        skillEngine.executeStep(trigger.step(), ctx);
-                    }
+                    triggerGuard.run(attacker.getUUID() + ":ATTACK", () -> {
+                        for (var trigger : attackerMob.definition().triggersOf(MobDefinition.SkillTrigger.Trigger.ATTACK)) {
+                            skillEngine.executeStep(trigger.step(), ctx);
+                        }
+                    });
                 }
             }
         });
@@ -147,9 +160,11 @@ public final class FabricMobManager {
                     mob.entity(),
                     killer != null ? FabricAdapters.living(killer) : null
             );
-            for (var trigger : mob.definition().triggersOf(MobDefinition.SkillTrigger.Trigger.DEATH)) {
-                skillEngine.executeStep(trigger.step(), ctx);
-            }
+            triggerGuard.run(victim.getUUID() + ":DEATH", () -> {
+                for (var trigger : mob.definition().triggersOf(MobDefinition.SkillTrigger.Trigger.DEATH)) {
+                    skillEngine.executeStep(trigger.step(), ctx);
+                }
+            });
             if (mob.definition().drops != null && mob.entity() != null && mob.entity().world() != null) {
                 var dropResult = mod.dropRegistry() != null
                         ? mod.dropRegistry().roll(mob.definition().drops)
@@ -174,9 +189,11 @@ public final class FabricMobManager {
                     mob.entity(),
                     FabricAdapters.living(player)
             );
-            for (var trigger : mob.definition().triggersOf(MobDefinition.SkillTrigger.Trigger.INTERACT)) {
-                skillEngine.executeStep(trigger.step(), ctx);
-            }
+            triggerGuard.run(entity.getUUID() + ":INTERACT", () -> {
+                for (var trigger : mob.definition().triggersOf(MobDefinition.SkillTrigger.Trigger.INTERACT)) {
+                    skillEngine.executeStep(trigger.step(), ctx);
+                }
+            });
             return InteractionResult.PASS;
         });
 
@@ -193,12 +210,14 @@ public final class FabricMobManager {
                     continue;
                 }
                 mob.tick();
-                for (var trigger : mob.definition().triggersOf(MobDefinition.SkillTrigger.Trigger.TIMER)) {
-                    int interval = trigger.timerTicks() > 0 ? trigger.timerTicks() : 20;
-                    if (mob.ticksAlive() % interval == 0) {
-                        skillEngine.executeStep(trigger.step(), new CoreSkillContext(mob.entity()));
+                triggerGuard.run(mob.entity().uuid() + ":TIMER", () -> {
+                    for (var trigger : mob.definition().triggersOf(MobDefinition.SkillTrigger.Trigger.TIMER)) {
+                        int interval = trigger.timerTicks() > 0 ? trigger.timerTicks() : 20;
+                        if (mob.ticksAlive() % interval == 0) {
+                            skillEngine.executeStep(trigger.step(), new CoreSkillContext(mob.entity()));
+                        }
                     }
-                }
+                });
             }
         });
 
