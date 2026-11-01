@@ -9,6 +9,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(LivingEntity.class)
@@ -31,6 +32,21 @@ public abstract class LivingEntityMixin {
                 BetterMobFabricMod.instance().mobManager().onHeal(entity, actualHealed);
             }
         }
+    }
+
+    @ModifyVariable(method = "hurtServer", at = @At("HEAD"), argsOnly = true)
+    private float bettermob$modifyDamage(float amount, ServerLevel level, DamageSource source) {
+        LivingEntity entity = (LivingEntity) (Object) this;
+        if (!level.isClientSide() && BetterMobFabricMod.instance() != null) {
+            ActiveFabricMob mob = BetterMobFabricMod.instance().mobManager().get(entity.getUUID());
+            if (mob != null) {
+                double modifier = BetterMobFabricMod.instance().mobManager().modifierFor(mob, source);
+                if (Double.isFinite(modifier) && modifier != 1.0) {
+                    return (float) (amount * modifier);
+                }
+            }
+        }
+        return amount;
     }
 
     @Inject(method = "dropAllDeathLoot", at = @At("HEAD"), cancellable = true)

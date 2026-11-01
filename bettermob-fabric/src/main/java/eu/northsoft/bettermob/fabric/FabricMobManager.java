@@ -1,5 +1,6 @@
 package eu.northsoft.bettermob.fabric;
 
+import eu.northsoft.bettermob.mob.DamageCauses;
 import eu.northsoft.bettermob.mob.MobDefinition;
 import eu.northsoft.bettermob.platform.PlatformLivingEntity;
 import eu.northsoft.bettermob.skill.core.CoreSkillContext;
@@ -10,8 +11,11 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.event.player.UseEntityCallback;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.TntEntity;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.projectile.ProjectileEntity;
+import net.minecraft.entity.projectile.thrown.PotionEntity;
+import net.minecraft.registry.tag.DamageTypeTags;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 
@@ -49,6 +53,32 @@ public final class FabricMobManager {
 
     public Map<UUID, ActiveFabricMob> activeMobs() {
         return activeMobs;
+    }
+
+    public double modifierFor(UUID uuid, DamageSource source) {
+        if (uuid == null || source == null) return 1.0;
+        return modifierFor(activeMobs.get(uuid), source);
+    }
+
+    public double modifierFor(ActiveFabricMob mob, DamageSource source) {
+        if (mob == null || mob.definition() == null || mob.definition().damageModifiers == null || source == null) {
+            return 1.0;
+        }
+        boolean explosion = source.isIn(DamageTypeTags.IS_EXPLOSION);
+        Entity direct = source.getSource();
+        boolean directEntity = direct != null;
+        boolean tnt = direct instanceof TntEntity;
+        boolean projectile = direct instanceof ProjectileEntity;
+        boolean potion = direct instanceof PotionEntity;
+        String damageTypeId = source.getTypeRegistryEntry().getKey()
+                .map(key -> key.getValue().toString())
+                .orElse(null);
+        String cause = DamageCauses.causeOf(damageTypeId, explosion, directEntity, tnt, projectile, potion);
+        Double modifier = mob.definition().damageModifiers.get(cause);
+        if (modifier == null || !Double.isFinite(modifier)) {
+            return 1.0;
+        }
+        return modifier;
     }
 
     public int livingOf(java.util.Set<String> mobIds) {
@@ -96,14 +126,8 @@ public final class FabricMobManager {
         ServerLivingEntityEvents.ALLOW_DAMAGE.register((victim, source, amount) -> {
             ActiveFabricMob mob = activeMobs.get(victim.getUuid());
             if (mob == null) return true;
-            if (mob.definition().damageModifiers != null) {
-                String causeKey = source.getType().msgId();
-                Double modifier = mob.definition().damageModifiers.get(causeKey);
-                if (modifier != null && modifier <= 0.0) {
-                    return false;
-                }
-            }
-            return true;
+            double modifier = modifierFor(mob, source);
+            return !(modifier <= 0.0);
         });
 
         ServerLivingEntityEvents.AFTER_DAMAGE.register((victim, source, baseDamageTaken, damageTaken, blocked) -> {
