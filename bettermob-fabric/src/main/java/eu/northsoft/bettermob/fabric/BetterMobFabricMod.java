@@ -47,6 +47,7 @@ public final class BetterMobFabricMod implements ModInitializer {
         registerMechanics();
         registerCommands();
         this.mobManager.registerEvents();
+        FabricSpawnerEvents.register(this.spawnerManager);
         net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents.SERVER_STARTING.register(platform::setServer);
         net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents.SERVER_STOPPED.register(server -> platform.setServer(null));
         LOGGER.info("BetterMob (Fabric) initialized for Minecraft {}", platform.minecraftVersion());

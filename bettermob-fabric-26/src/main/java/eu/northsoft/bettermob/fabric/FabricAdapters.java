@@ -32,4 +32,27 @@ public final class FabricAdapters {
         if (entity.handle() instanceof Entity mc) return mc;
         throw new IllegalArgumentException("Not a Fabric entity: " + entity.getClass().getName());
     }
+
+    public static void addTag(PlatformEntity entity, String tag) {
+        if (entity != null && tag != null && entity.handle() instanceof Entity mc) {
+            mc.addTag(tag);
+        }
+    }
+
+    public static java.util.Set<String> tags(Entity entity) {
+        return entity == null ? java.util.Set.of() : entity.entityTags();
+    }
+
+    public static boolean entitiesLoaded(eu.northsoft.bettermob.platform.PlatformWorld world, double x, double z, int radius) {
+        if (world == null || !(world.handle() instanceof net.minecraft.server.level.ServerLevel level)) return false;
+        int chunkRadius = Math.max(0, radius) / 16 + 1;
+        int centerX = ((int) Math.floor(x)) >> 4;
+        int centerZ = ((int) Math.floor(z)) >> 4;
+        for (int cx = centerX - chunkRadius; cx <= centerX + chunkRadius; cx++) {
+            for (int cz = centerZ - chunkRadius; cz <= centerZ + chunkRadius; cz++) {
+                if (!level.areEntitiesLoaded(net.minecraft.world.level.ChunkPos.pack(cx, cz))) return false;
+            }
+        }
+        return true;
+    }
 }

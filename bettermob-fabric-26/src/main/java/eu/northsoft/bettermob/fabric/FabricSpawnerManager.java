@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -19,11 +20,13 @@ import java.util.concurrent.ThreadLocalRandom;
 
 public final class FabricSpawnerManager {
     private static final Logger LOGGER = LoggerFactory.getLogger("bettermob");
+    private static final String TAG_PREFIX = "bettermob.spawner.";
 
     public static final class ActiveSpawner {
         private final SpawnerDefinition definition;
         private final Set<UUID> alive = ConcurrentHashMap.newKeySet();
         private long nextSpawnTick = 0;
+        private volatile boolean reconciled;
 
         public ActiveSpawner(SpawnerDefinition definition) {
             this.definition = definition;
@@ -43,6 +46,14 @@ public final class FabricSpawnerManager {
 
         public void nextSpawnTick(long tick) {
             this.nextSpawnTick = tick;
+        }
+
+        public boolean reconciled() {
+            return reconciled;
+        }
+
+        public void reconciled(boolean reconciled) {
+            this.reconciled = reconciled;
         }
     }
 
@@ -65,7 +76,36 @@ public final class FabricSpawnerManager {
         return fingerprints;
     }
 
+    public static String tagOf(String spawnerId) {
+        return TAG_PREFIX + spawnerId.toLowerCase(java.util.Locale.ROOT);
+    }
+
+    public static String spawnerIdOf(Collection<String> tags) {
+        if (tags == null) return null;
+        for (String tag : tags) {
+            if (tag != null && tag.startsWith(TAG_PREFIX) && tag.length() > TAG_PREFIX.length()) {
+                return tag.substring(TAG_PREFIX.length());
+            }
+        }
+        return null;
+    }
+
+    public void track(UUID uuid, Collection<String> tags) {
+        String id = spawnerIdOf(tags);
+        if (uuid == null || id == null) return;
+        ActiveSpawner spawner = spawners.get(id);
+        if (spawner != null) spawner.alive().add(uuid);
+    }
+
+    public void untrack(UUID uuid) {
+        if (uuid == null) return;
+        for (ActiveSpawner spawner : spawners.values()) {
+            spawner.alive().remove(uuid);
+        }
+    }
+
     public void load() {
+        Map<String, ActiveSpawner> previous = new java.util.HashMap<>(spawners);
         spawners.clear();
         Map<String, String> prints = new java.util.LinkedHashMap<>();
         File file = configFile.toFile();
@@ -80,7 +120,14 @@ public final class FabricSpawnerManager {
                 SpawnerDefinition def = SpawnerDefinition.read(id, sec);
                 if (def != null) {
                     String lower = id.toLowerCase(java.util.Locale.ROOT);
-                    spawners.put(lower, new ActiveSpawner(def));
+                    ActiveSpawner spawner = new ActiveSpawner(def);
+                    ActiveSpawner old = previous.get(lower);
+                    if (old != null) {
+                        spawner.alive().addAll(old.alive());
+                        spawner.nextSpawnTick(old.nextSpawnTick());
+                        spawner.reconciled(old.reconciled());
+                    }
+                    spawners.put(lower, spawner);
                     prints.put(lower, eu.northsoft.bettermob.util.ReloadDiff.fingerprint(sec));
                 }
             }
@@ -100,7 +147,10 @@ public final class FabricSpawnerManager {
             PlatformWorld world = mod.platform().world(def.world()).orElse(null);
             if (world == null) continue;
 
-            spawner.alive().removeIf(uuid -> mod.mobManager().get(uuid) == null);
+            if (!spawner.reconciled()) {
+                if (!FabricAdapters.entitiesLoaded(world, def.x(), def.z(), def.radius())) continue;
+                spawner.reconciled(true);
+            }
 
             if (spawner.alive().size() >= def.max()) continue;
             if (currentTick < spawner.nextSpawnTick()) continue;
@@ -131,6 +181,7 @@ public final class FabricSpawnerManager {
                 if (mod.platform().model("bettermodel").isPresent() && mobDef.modelId != null) {
                     mod.platform().model("bettermodel").get().attach(living, mobDef.modelId);
                 }
+                FabricAdapters.addTag(living, tagOf(def.id()));
                 mod.mobManager().register(living.uuid(), mobDef, living);
                 spawner.alive().add(living.uuid());
                 spawner.nextSpawnTick(currentTick + ((long) def.intervalSeconds() * 20));
