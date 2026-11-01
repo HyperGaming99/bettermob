@@ -22,8 +22,8 @@
 </p>
 
 > [!WARNING]
-> **Fabric & Quilt Beta / Early Access Notice**  
-> Fabric and Quilt support is currently in active development. We recommend using the Fabric/Quilt mod primarily in **Singleplayer** or on **testing/development servers** before deploying it to a live production environment.
+> **Fabric Beta / Early Access Notice**  
+> Fabric support is currently in active development. We recommend using the Fabric mod primarily in **Singleplayer** or on **testing/development servers** before deploying it to a live production environment.
 
 ---
 
@@ -39,7 +39,7 @@
 
 <p align="center">
   <img alt="100 Downloads Reached" height="48" src="https://raw.githubusercontent.com/HyperGaming99/bettermob/docs/goals-badges/assets/badges/downloads-100_unlocked_vector.svg">
-  <img alt="200 Downloads Goal" height="48" src="https://raw.githubusercontent.com/HyperGaming99/bettermob/docs/goals-badges/assets/badges/downloads-200_locked_vector.svg">
+  <img alt="200 Downloads Goal" height="48" src="https://raw.githubusercontent.com/HyperGaming99/bettermob/docs/goals-badges/assets/badges/downloads-200_unlocked_vector.svg">
   <img alt="500 Downloads Goal" height="48" src="https://raw.githubusercontent.com/HyperGaming99/bettermob/docs/goals-badges/assets/badges/downloads-500_locked_vector.svg">
   <img alt="1k Downloads Goal" height="48" src="https://raw.githubusercontent.com/HyperGaming99/bettermob/docs/goals-badges/assets/badges/downloads-1k_locked_vector.svg">
 </p>
@@ -51,7 +51,7 @@
 | | |
 |---|---|
 | 🐷 **Mobs in YAML** | Any vanilla type as the body, with health, damage, AI goals and options. One mob per file or many per file. |
-| 🎭 **3D models** | Attach [BetterModel](https://modrinth.com/plugin/bettermodel) or [ModelEngine](https://www.spigotmc.org/resources/model-engine-4.108821/) models, including rideable seats with real WASD control. |
+| 🎭 **3D models** | Attach [BetterModel](https://modrinth.com/plugin/bettermodel) or [ModelEngine](https://mythiccraft.io/index.php?resources/model-engine%E2%80%94ultimate-entity-model-manager-1-19-4-26-2.1213/product-download) models, including rideable seats with real WASD control. |
 | ⚡ **Skill engine** | Triggers, mechanics, conditions and targeters with `delay`, `cd` and inline `?condition` on every line. Variables, skill arguments, inline skills. |
 | 👹 **Boss fights** | Health phases, boss bars, patrol and guard behaviour, groups that call for help, leaders and followers, threat tables. |
 | 🎴 **Items and loot** | Custom items with right-click, swing and pickup skills, drop tables, vanilla loot tables, spawn eggs, kill counters and top lists. |
@@ -60,11 +60,11 @@
 | 🧰 **Tools** | `/bettermob test`, aggro lines, a live reload report, skill profiling, JSON schemas for editors. |
 | 🔌 **Developer API** | Custom mechanics, conditions, targeters, placeholders and a long list of events. |
 
-BetterMob runs on **Folia** and **Paper** as a plugin, and on **Fabric / Quilt (1.21.11 to 26.x)** as a mod (supporting both client singleplayer and dedicated server environments).
+BetterMob runs on **Folia** and **Paper** as a plugin, and on **Fabric 1.21+** as a mod (supporting both client singleplayer and dedicated server environments).
 
 ### 🌐 Platform Feature Matrix
 
-| Feature | Paper / Folia | Fabric / Quilt (1.21.11 – 26.x) |
+| Feature | Paper / Folia | Fabric |
 |---|---|---|
 | **YAML Mob Definitions** | ✅ `plugins/BetterMob/mobs/*.yml` | ✅ `config/bettermob/mobs/*.yml` |
 | **3D Models** | ✅ [BetterModel](https://modrinth.com/plugin/bettermodel) & [ModelEngine](https://www.spigotmc.org/resources/model-engine-4.108821/) | ✅ [BetterModel-Fabric](https://modrinth.com/mod/bettermodel) |
