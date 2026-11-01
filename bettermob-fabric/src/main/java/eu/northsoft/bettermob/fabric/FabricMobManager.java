@@ -124,11 +124,10 @@ public final class FabricMobManager {
             }
         });
         mob.checkPhases(skillEngine, mod);
+        var crossed = mob.crossedHealthTriggers(entity.getHealth(), entity.getMaxHealth());
         triggerGuard.run(entity.getUuid() + ":HEALTH", () -> {
-            for (var trigger : mob.definition().triggersOf(MobDefinition.SkillTrigger.Trigger.HEALTH)) {
-                if (trigger.health() != null && trigger.health().matches(entity.getHealth(), entity.getMaxHealth())) {
-                    skillEngine.executeStep(trigger.step(), ctx);
-                }
+            for (var trigger : crossed) {
+                skillEngine.executeStep(trigger.step(), ctx);
             }
         });
     }
@@ -155,11 +154,10 @@ public final class FabricMobManager {
                     }
                 });
                 victimMob.checkPhases(skillEngine, mod);
+                var crossed = victimMob.crossedHealthTriggers(victim.getHealth(), victim.getMaxHealth());
                 triggerGuard.run(victim.getUuid() + ":HEALTH", () -> {
-                    for (var trigger : victimMob.definition().triggersOf(MobDefinition.SkillTrigger.Trigger.HEALTH)) {
-                        if (trigger.health() != null && trigger.health().matches(victim.getHealth(), victim.getMaxHealth())) {
-                            skillEngine.executeStep(trigger.step(), ctx);
-                        }
+                    for (var trigger : crossed) {
+                        skillEngine.executeStep(trigger.step(), ctx);
                     }
                 });
             }
