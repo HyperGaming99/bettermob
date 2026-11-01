@@ -57,6 +57,20 @@ public final class ActiveFabricMob {
         return currentPhaseIndex;
     }
 
+    public void restorePhase(BetterMobFabricMod mod) {
+        if (!definition.hasPhases() || entity == null || !entity.isValid()) return;
+        currentPhaseIndex = MobPhase.select(definition.phases, entity.health(), entity.maxHealth());
+        if (currentPhaseIndex == -1) return;
+        MobPhase phase = definition.phases.get(currentPhaseIndex);
+        if (phase.display() != null && !phase.display().isBlank()) {
+            entity.customName(phase.display().replace('&', '§'));
+            entity.customNameVisible(true);
+        }
+        if (phase.model() != null && mod != null && mod.platform() != null) {
+            mod.platform().model("bettermodel").ifPresent(model -> model.attach(entity, phase.model()));
+        }
+    }
+
     public void checkPhases(CoreSkillEngine engine, BetterMobFabricMod mod) {
         if (!definition.hasPhases() || entity == null || !entity.isValid()) return;
         int nextPhase = MobPhase.select(definition.phases, entity.health(), entity.maxHealth());

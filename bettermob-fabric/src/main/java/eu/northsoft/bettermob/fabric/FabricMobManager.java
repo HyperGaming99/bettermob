@@ -2,6 +2,7 @@ package eu.northsoft.bettermob.fabric;
 
 import eu.northsoft.bettermob.mob.MobDefinition;
 import eu.northsoft.bettermob.platform.PlatformLivingEntity;
+import eu.northsoft.bettermob.skill.SkillStep;
 import eu.northsoft.bettermob.skill.core.CoreSkillContext;
 import eu.northsoft.bettermob.skill.core.CoreSkillEngine;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
@@ -30,6 +31,9 @@ public final class FabricMobManager {
     }
 
     public void register(UUID uuid, MobDefinition definition, PlatformLivingEntity entity) {
+        if (entity.handle() instanceof LivingEntity living) {
+            living.addCommandTag(FabricMobTags.tag(definition.id));
+        }
         ActiveFabricMob mob = new ActiveFabricMob(uuid, definition, entity);
         activeMobs.put(uuid, mob);
 
@@ -202,9 +206,34 @@ public final class FabricMobManager {
             }
         });
 
+        ServerEntityEvents.ENTITY_LOAD.register((entity, world) -> {
+            if (!(entity instanceof LivingEntity living)) return;
+            ActiveFabricMob existing = activeMobs.get(entity.getUuid());
+            if (existing != null && existing.entity().handle() == entity) return;
+            String id = FabricMobTags.mobId(entity.getCommandTags());
+            if (id == null) return;
+            MobDefinition definition = mod.mobRegistry().get(id);
+            if (definition == null) return;
+            PlatformLivingEntity adapted = FabricAdapters.living(living);
+            ActiveFabricMob mob = new ActiveFabricMob(entity.getUuid(), definition, adapted);
+            activeMobs.put(entity.getUuid(), mob);
+            boolean hasLoadModel = definition.triggersOf(MobDefinition.SkillTrigger.Trigger.LOAD).stream()
+                    .anyMatch(trigger -> trigger.step() instanceof SkillStep.Mechanic mechanic
+                            && mechanic.name().equals("model"));
+            if (definition.modelId != null && !hasLoadModel) {
+                mod.platform().model("bettermodel").ifPresent(model -> model.attach(adapted, definition.modelId));
+            }
+            mob.restorePhase(mod);
+            CoreSkillContext ctx = new CoreSkillContext(adapted);
+            for (var trigger : definition.triggersOf(MobDefinition.SkillTrigger.Trigger.LOAD)) {
+                skillEngine.executeStep(trigger.step(), ctx);
+            }
+        });
+
         ServerEntityEvents.ENTITY_UNLOAD.register((entity, world) -> {
-            if (entity.isRemoved()) {
-                activeMobs.remove(entity.getUuid());
+            ActiveFabricMob mob = activeMobs.get(entity.getUuid());
+            if (mob != null && mob.entity().handle() == entity) {
+                activeMobs.remove(entity.getUuid(), mob);
             }
         });
     }
