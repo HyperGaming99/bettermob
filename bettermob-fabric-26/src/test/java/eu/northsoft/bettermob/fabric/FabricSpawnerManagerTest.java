@@ -6,9 +6,15 @@ import org.junit.jupiter.api.io.TempDir;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class FabricSpawnerManagerTest {
 
@@ -45,5 +51,70 @@ class FabricSpawnerManagerTest {
         assertEquals(15, spawner.definition().intervalSeconds());
         assertEquals(4, spawner.definition().max());
         assertEquals(40, spawner.definition().playerRange());
+    }
+
+    @Test
+    void buildsAndReadsSpawnerTags() {
+        assertEquals("bettermob.spawner.graveyard_knight", FabricSpawnerManager.tagOf("Graveyard_Knight"));
+        assertEquals("graveyard_knight", FabricSpawnerManager.spawnerIdOf(List.of("other", "bettermob.spawner.graveyard_knight")));
+        assertNull(FabricSpawnerManager.spawnerIdOf(List.of("other", "bettermob.spawner.")));
+        assertNull(FabricSpawnerManager.spawnerIdOf(null));
+    }
+
+    @Test
+    void keepsAliveMobsAcrossReload(@TempDir Path tempDir) throws IOException {
+        Path spawnersYml = writeSpawner(tempDir);
+        FabricSpawnerManager manager = new FabricSpawnerManager(new BetterMobFabricMod(), spawnersYml);
+        manager.load();
+        UUID mob = UUID.randomUUID();
+        manager.track(mob, Set.of(FabricSpawnerManager.tagOf("graveyard_knight")));
+        manager.spawners().get("graveyard_knight").nextSpawnTick(1200);
+        manager.spawners().get("graveyard_knight").reconciled(true);
+
+        manager.load();
+
+        FabricSpawnerManager.ActiveSpawner spawner = manager.spawners().get("graveyard_knight");
+        assertTrue(spawner.alive().contains(mob));
+        assertEquals(1200, spawner.nextSpawnTick());
+        assertTrue(spawner.reconciled());
+    }
+
+    @Test
+    void newSpawnerStartsUnreconciled(@TempDir Path tempDir) throws IOException {
+        FabricSpawnerManager manager = new FabricSpawnerManager(new BetterMobFabricMod(), writeSpawner(tempDir));
+        manager.load();
+        assertFalse(manager.spawners().get("graveyard_knight").reconciled());
+    }
+
+    @Test
+    void tracksOnlyKnownSpawnersAndUntracksOnRemoval(@TempDir Path tempDir) throws IOException {
+        FabricSpawnerManager manager = new FabricSpawnerManager(new BetterMobFabricMod(), writeSpawner(tempDir));
+        manager.load();
+        UUID known = UUID.randomUUID();
+        UUID unknown = UUID.randomUUID();
+
+        manager.track(known, Set.of(FabricSpawnerManager.tagOf("graveyard_knight")));
+        manager.track(unknown, Set.of(FabricSpawnerManager.tagOf("missing")));
+        manager.track(UUID.randomUUID(), Set.of("unrelated"));
+
+        Set<UUID> alive = manager.spawners().get("graveyard_knight").alive();
+        assertEquals(Set.of(known), alive);
+
+        manager.untrack(known);
+        assertFalse(alive.contains(known));
+    }
+
+    private static Path writeSpawner(Path tempDir) throws IOException {
+        Path spawnersYml = tempDir.resolve("spawners.yml");
+        Files.writeString(spawnersYml, """
+                graveyard_knight:
+                  mob: skeleton_knight
+                  world: minecraft:overworld
+                  x: 0
+                  y: 64
+                  z: 0
+                  max: 1
+                """);
+        return spawnersYml;
     }
 }
