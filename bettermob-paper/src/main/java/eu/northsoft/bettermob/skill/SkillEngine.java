@@ -449,7 +449,7 @@ public final class SkillEngine implements Listener {
                 }
             };
             if (target.entity() != null) Tasks.runOwned(plugin, target.entity(), run, deferral::complete);
-            else if (target.location() != null) Tasks.runOwnedAt(plugin, target.location(), run);
+            else if (target.location() != null) Tasks.runOwnedAt(plugin, target.location(), run, deferral::complete);
             else run.run();
         }
     }

@@ -48,4 +48,15 @@ class DeferralTest {
         deferral.complete();
         assertEquals(1, resumed.get());
     }
+
+    @Test
+    void excessCompleteDoesNotCorruptOrDeadlock() {
+        Deferral deferral = new Deferral();
+        AtomicInteger resumed = new AtomicInteger();
+        deferral.complete();
+        deferral.add();
+        assertTrue(deferral.await(resumed::incrementAndGet));
+        deferral.complete();
+        assertEquals(1, resumed.get());
+    }
 }

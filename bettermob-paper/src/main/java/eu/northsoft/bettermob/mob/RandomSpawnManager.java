@@ -52,6 +52,10 @@ public final class RandomSpawnManager {
         nextSpawnAt.clear();
     }
 
+    public void onQuit(UUID playerId) {
+        if (playerId != null) nextSpawnAt.keySet().removeIf(k -> playerId.equals(k.player()));
+    }
+
     private void tick() {
         for (Player player : plugin.getServer().getOnlinePlayers()) {
             Tasks.runOn(plugin, player, () -> attemptFor(player));

@@ -6,6 +6,15 @@ base {
     archivesName.set("bettermob-fabric-mc1.21")
 }
 
+sourceSets {
+    main {
+        java.srcDir("src/shared/java")
+    }
+    test {
+        java.srcDir("src/shared/test")
+    }
+}
+
 dependencies {
     "minecraft"("com.mojang:minecraft:1.21.11")
     "mappings"("net.fabricmc:yarn:1.21.11+build.6:v2")

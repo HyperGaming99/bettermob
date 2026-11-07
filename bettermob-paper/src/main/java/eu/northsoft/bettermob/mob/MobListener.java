@@ -33,6 +33,7 @@ import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
 import org.bukkit.event.entity.PlayerLeashEntityEvent;
 import org.bukkit.event.player.PlayerArmorStandManipulateEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.world.EntitiesLoadEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.projectiles.ProjectileSource;
@@ -49,11 +50,24 @@ public final class MobListener implements Listener {
     private final MobManager manager;
     private final DropRegistry drops;
     private final KillStats kills;
+    private final RandomSpawnManager randomSpawns;
 
     public MobListener(MobManager manager, DropRegistry drops, KillStats kills) {
+        this(manager, drops, kills, null);
+    }
+
+    public MobListener(MobManager manager, DropRegistry drops, KillStats kills, RandomSpawnManager randomSpawns) {
         this.manager = manager;
         this.drops = drops;
         this.kills = kills;
+        this.randomSpawns = randomSpawns;
+    }
+
+    @EventHandler
+    public void onPlayerQuit(PlayerQuitEvent event) {
+        if (randomSpawns != null && event.getPlayer() != null) {
+            randomSpawns.onQuit(event.getPlayer().getUniqueId());
+        }
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)

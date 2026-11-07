@@ -160,10 +160,11 @@ public final class BetterMobPlugin extends JavaPlugin {
         dropRegistry.load();
 
         manager = new MobManager(this, registry, betterModel, modelEngine, itemRegistry);
+        randomSpawns = new RandomSpawnManager(this, manager);
         SkillEngine skillEngine = new SkillEngine(this, skillRegistry, manager, betterModel, modelEngine, itemRegistry);
         skillEngine.setDrops(dropRegistry);
         manager.setSkillEngine(skillEngine);
-        getServer().getPluginManager().registerEvents(new MobListener(manager, dropRegistry, kills), this);
+        getServer().getPluginManager().registerEvents(new MobListener(manager, dropRegistry, kills, randomSpawns), this);
         getServer().getPluginManager().registerEvents(new ItemListener(itemRegistry, skillEngine), this);
         getServer().getPluginManager().registerEvents(skillEngine.chatPrompts(), this);
         EggItems eggItems = new EggItems(this);
@@ -179,7 +180,6 @@ public final class BetterMobPlugin extends JavaPlugin {
         spawners.load();
         getServer().getPluginManager().registerEvents(new SpawnerListener(spawners), this);
         spawners.start();
-        randomSpawns = new RandomSpawnManager(this, manager);
         randomSpawns.start();
         Tasks.runGlobal(this, ExtraTriggers::ready);
 
