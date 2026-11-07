@@ -21,7 +21,7 @@ public record SkillContext(LivingEntity caster, LivingEntity trigger, Cancellabl
     }
 
     public SkillContext(LivingEntity caster, LivingEntity trigger, Cancellable event, Location origin, boolean targetIsTrigger) {
-        this(caster, trigger, event, origin, targetIsTrigger, new ConcurrentHashMap<>());
+        this(caster, trigger, event, origin, targetIsTrigger, new LazyVariableMap());
     }
 
     public SkillContext(LivingEntity caster, LivingEntity trigger, Cancellable event) {

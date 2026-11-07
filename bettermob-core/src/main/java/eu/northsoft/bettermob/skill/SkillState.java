@@ -17,6 +17,7 @@ public class SkillState {
     private record StepKey(UUID caster, int step) {}
 
     private final Map<Object, Long> cooldowns = new ConcurrentHashMap<>();
+    private final Map<UUID, java.util.Set<Object>> casterCooldownKeys = new ConcurrentHashMap<>();
     private final Map<UUID, Map<String, String>> casterVariables = new ConcurrentHashMap<>();
     private final Map<UUID, Map<String, Aura>> auras = new ConcurrentHashMap<>();
     private static final int MIN_PURGE_SIZE = 2048;
@@ -58,6 +59,13 @@ public class SkillState {
             acquired[0] = true;
             return now + millis;
         });
+        if (acquired[0]) {
+            if (key instanceof SkillKey sk) {
+                casterCooldownKeys.computeIfAbsent(sk.caster(), id -> ConcurrentHashMap.newKeySet()).add(sk);
+            } else if (key instanceof StepKey stk) {
+                casterCooldownKeys.computeIfAbsent(stk.caster(), id -> ConcurrentHashMap.newKeySet()).add(stk);
+            }
+        }
         return acquired[0];
     }
 
@@ -121,7 +129,11 @@ public class SkillState {
         Map<String, Aura> removed = auras.remove(entityId);
         if (removed != null) removed.values().forEach(Aura::stop);
         gcdUntilMillis.remove(entityId);
-        cooldowns.keySet().removeIf(key -> (key instanceof SkillKey skillKey && skillKey.caster().equals(entityId))
-                || (key instanceof StepKey stepKey && stepKey.caster().equals(entityId)));
+        java.util.Set<Object> keys = casterCooldownKeys.remove(entityId);
+        if (keys != null) {
+            for (Object k : keys) {
+                cooldowns.remove(k);
+            }
+        }
     }
 }

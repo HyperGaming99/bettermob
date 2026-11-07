@@ -13,7 +13,11 @@ public final class Deferral {
     }
 
     public void complete() {
-        if (outstanding.decrementAndGet() == 0) resumeIfReady();
+        int remaining = outstanding.decrementAndGet();
+        if (remaining <= 0) {
+            outstanding.set(0);
+            resumeIfReady();
+        }
     }
 
     public boolean await(Runnable next) {

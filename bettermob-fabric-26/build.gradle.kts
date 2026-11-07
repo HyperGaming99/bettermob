@@ -6,6 +6,15 @@ base {
     archivesName.set("bettermob-fabric-mc26")
 }
 
+sourceSets {
+    main {
+        java.srcDir("../bettermob-fabric/src/shared/java")
+    }
+    test {
+        java.srcDir("../bettermob-fabric/src/shared/test")
+    }
+}
+
 extensions.configure<JavaPluginExtension> {
     toolchain.languageVersion.set(JavaLanguageVersion.of(25))
 }

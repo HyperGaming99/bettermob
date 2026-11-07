@@ -22,6 +22,7 @@ public final class BetterModelHook {
     private static final String ADAPTER = "kr.toxicity.model.api.bukkit.platform.BukkitAdapter";
     private static final String REGISTRY = "kr.toxicity.model.api.tracker.EntityTrackerRegistry";
     private static final int MAX_OWNER_MISSES = 1024;
+    private static final int MAX_OWNER_CACHE = 1024;
     private static final String HIT_BOX = "kr.toxicity.model.api.nms.HitBox";
     private static final String PLATFORM_ENTITY = "kr.toxicity.model.api.platform.PlatformEntity";
     private static final String MODIFIER = "kr.toxicity.model.api.animation.AnimationModifier";
@@ -253,6 +254,13 @@ public final class BetterModelHook {
             for (Object registry : registries) {
                 if (!ridersOf(registry).contains(rider)) continue;
                 UUID owner = (UUID) Reflection.method(registryType, "uuid").invoke(registry);
+                if (ownerCache.size() >= MAX_OWNER_CACHE) {
+                    var it = ownerCache.keySet().iterator();
+                    for (int i = 0; i < 256 && it.hasNext(); i++) {
+                        it.next();
+                        it.remove();
+                    }
+                }
                 ownerCache.put(rider, owner);
                 ownerMisses.remove(rider);
                 return owner;
@@ -260,9 +268,22 @@ public final class BetterModelHook {
         } catch (ReflectiveOperationException | RuntimeException | LinkageError exception) {
             plugin.messages().warn("betterModel.callFailed", "action", "owner", "error", rootMessage(exception));
         }
-        if (ownerMisses.size() > MAX_OWNER_MISSES) ownerMisses.clear();
+        if (ownerMisses.size() >= MAX_OWNER_MISSES) {
+            var it = ownerMisses.keySet().iterator();
+            for (int i = 0; i < 256 && it.hasNext(); i++) {
+                it.next();
+                it.remove();
+            }
+        }
         ownerMisses.put(rider, now);
         return null;
+    }
+
+    public void invalidateOwner(UUID entityId) {
+        if (entityId != null) {
+            ownerCache.remove(entityId);
+            ownerMisses.remove(entityId);
+        }
     }
 
     private boolean mountedOn(UUID owner, UUID rider) {
