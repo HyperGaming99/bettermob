@@ -115,7 +115,7 @@ MythicMobs names that differ from Paper's are translated:
 
 | You write | Paper goal |
 |---|---|
-| `meleeattack` | `melee_attack` |
+| `meleeattack` | `melee_attack` (and mob-specific variants such as `zombie_attack`, `drowned_attack`, `spider_attack`, `vindicator_attack`, `ravager_attack`, `guardian_attack`, etc.) |
 | `attacker` | `hurt_by` (fight back against whoever hit it) |
 | `players` / `nearestplayer` | `nearest_attackable` |
 | `lookatplayers` | `look_at_player` |
