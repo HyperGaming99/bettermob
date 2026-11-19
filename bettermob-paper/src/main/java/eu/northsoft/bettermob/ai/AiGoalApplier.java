@@ -23,6 +23,19 @@ import java.util.regex.Pattern;
 public final class AiGoalApplier {
     private static final Map<String, List<String>> ALIASES = Map.of(
             "attacker", List.of("hurtby"),
+            "meleeattack", List.of(
+                    "meleeattack",
+                    "zombieattack",
+                    "drownedattack",
+                    "spiderattack",
+                    "vindicatorattack",
+                    "ravagerattack",
+                    "pandaattack",
+                    "beeattack",
+                    "foxmeleeattack",
+                    "polarbearmeleeattack",
+                    "evilrabbitattack",
+                    "guardianattack"),
             "players", List.of("nearestattackable"),
             "player", List.of("nearestattackable"),
             "nearestplayer", List.of("nearestattackable"),
@@ -118,7 +131,7 @@ public final class AiGoalApplier {
         };
     }
 
-    private static Goal<Mob> findByName(List<Goal<Mob>> snapshot, String name) {
+    static Goal<Mob> findByName(List<Goal<Mob>> snapshot, String name) {
         String normalized = normalize(name);
         List<Goal<Mob>> candidates = snapshot;
         if (PLAYER_ALIASES.contains(normalized)) {
