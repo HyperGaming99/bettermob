@@ -38,6 +38,7 @@ import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Mob;
+import org.bukkit.entity.Phantom;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Zombie;
 import org.bukkit.event.Cancellable;
@@ -235,6 +236,7 @@ public final class MobManager {
         boolean burn = !optionsOf(entity, definition).preventSunburn();
         if (entity instanceof Zombie zombie) zombie.setShouldBurnInDay(burn);
         if (entity instanceof AbstractSkeleton skeleton) skeleton.setShouldBurnInDay(burn);
+        if (entity instanceof Phantom phantom) phantom.setShouldBurnInDay(burn);
     }
 
     private void applyAppearanceOptions(LivingEntity entity, MobDefinition definition) {
