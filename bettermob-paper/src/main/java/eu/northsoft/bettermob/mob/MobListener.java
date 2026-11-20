@@ -23,6 +23,9 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.CreatureSpawnEvent;
+import org.bukkit.event.entity.EntityCombustByBlockEvent;
+import org.bukkit.event.entity.EntityCombustByEntityEvent;
+import org.bukkit.event.entity.EntityCombustEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
@@ -67,6 +70,16 @@ public final class MobListener implements Listener {
     public void onPlayerQuit(PlayerQuitEvent event) {
         if (randomSpawns != null && event.getPlayer() != null) {
             randomSpawns.onQuit(event.getPlayer().getUniqueId());
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onSunburn(EntityCombustEvent event) {
+        if (event instanceof EntityCombustByBlockEvent || event instanceof EntityCombustByEntityEvent) return;
+        if (!(event.getEntity() instanceof LivingEntity living)) return;
+        MobDefinition definition = manager.definitionOf(living.getUniqueId());
+        if (definition != null && manager.optionsOf(living, definition).preventSunburn()) {
+            event.setCancelled(true);
         }
     }
 
