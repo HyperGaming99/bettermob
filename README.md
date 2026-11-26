@@ -40,7 +40,7 @@
 <p align="center">
   <img alt="100 Downloads Reached" height="48" src="https://raw.githubusercontent.com/HyperGaming99/bettermob/docs/goals-badges/assets/badges/downloads-100_unlocked_vector.svg">
   <img alt="200 Downloads Goal" height="48" src="https://raw.githubusercontent.com/HyperGaming99/bettermob/docs/goals-badges/assets/badges/downloads-200_unlocked_vector.svg">
-  <img alt="500 Downloads Goal" height="48" src="https://raw.githubusercontent.com/HyperGaming99/bettermob/docs/goals-badges/assets/badges/downloads-500_locked_vector.svg">
+  <img alt="500 Downloads Goal" height="48" src="https://raw.githubusercontent.com/HyperGaming99/bettermob/docs/goals-badges/assets/badges/downloads-500_unlocked_vector.svg">
   <img alt="1k Downloads Goal" height="48" src="https://raw.githubusercontent.com/HyperGaming99/bettermob/docs/goals-badges/assets/badges/downloads-1k_locked_vector.svg">
 </p>
 
