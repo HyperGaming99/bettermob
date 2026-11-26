@@ -31,7 +31,7 @@
 
 <p align="center">
   <img alt="20 Servers Reached" height="48" src="https://raw.githubusercontent.com/HyperGaming99/bettermob/docs/goals-badges/assets/badges/servers-20_unlocked_vector.svg">
-  <img alt="40 Servers Goal" height="48" src="https://raw.githubusercontent.com/HyperGaming99/bettermob/docs/goals-badges/assets/badges/servers-40_locked_vector.svg">
+  <img alt="40 Servers Goal" height="48" src="https://raw.githubusercontent.com/HyperGaming99/bettermob/docs/goals-badges/assets/badges/servers-40_unlocked_vector.svg">
   <img alt="100 Servers Goal" height="48" src="https://raw.githubusercontent.com/HyperGaming99/bettermob/docs/goals-badges/assets/badges/servers-100_locked_vector.svg">
   <img alt="500 Servers Goal" height="48" src="https://raw.githubusercontent.com/HyperGaming99/bettermob/docs/goals-badges/assets/badges/servers-500_locked_vector.svg">
   <img alt="1k Servers Goal" height="48" src="https://raw.githubusercontent.com/HyperGaming99/bettermob/docs/goals-badges/assets/badges/servers-1k_locked_vector.svg">
